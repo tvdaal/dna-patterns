@@ -1,8 +1,4 @@
 """This module supports analyses of DNA sequences.
-
-  Example of how to run:
-
-  python sequence.py /Users/tvdaal/Dropbox/Tom/CS/Bioinformatics/Dataset.txt
 """
 
 
@@ -22,13 +18,19 @@ def parse_txt_file(path: str) -> List[str]:
 
     f = open(path, "r")
     contents = str(f.read())
+    f.close()
 
     return contents.split()
 
 
 class Sequence:
     """This class defines a DNA sequence.
+
+    Attributes:
+            complements: Dictionary of complementary nucleotides.
     """
+
+    complements = {"A": "T", "T": "A", "G": "C", "C": "G"}
 
     def __init__(self, sequence: str):
         """Initializes the Sequence class.
@@ -39,11 +41,28 @@ class Sequence:
         self.sequence = sequence
         self.length = len(sequence)
 
+    def reverse_complement(self) -> str:
+        """Finds the reverse complement of a sequence.
+
+        This method has linear time complexity.
+
+        Returns:
+            The reverse complement of the sequence.
+        """
+
+        rc_list = []
+        for nucleotide in self.sequence:
+            complement = self.complements[nucleotide]
+            rc_list.append(complement)
+        rc_list.reverse()
+        rc = "".join(rc_list)
+
+        return rc
+
     def pattern_count(self, pattern: str) -> int:
         """Counts the number of times a pattern occurs in the sequence.
 
-        This function was used for exercise 1.2.5 and has linear time
-        complexity.
+        This method has linear time complexity.
 
         Args:
             pattern: The pattern that needs to be matched.
@@ -64,8 +83,7 @@ class Sequence:
     def frequency_table(self, k: int) -> Dict[str, int]:
         """Counts the frequency of all k-mers that occur in the sequence.
 
-        This function was used for exercise 1.2.13 and has linear time
-        complexity.
+        This method has linear time complexity.
 
         Args:
             k: Length of pattern (k-mer).
@@ -90,8 +108,7 @@ class Sequence:
     def frequent_words(self, k: int) -> List[str]:
         """Searches for the most frequent patterns of length k in the sequence.
 
-        This function was used for exercise 1.2.13 and has linear time
-        complexity.
+        This method has linear time complexity.
 
         Args:
             k: Length of pattern (k-mer).
