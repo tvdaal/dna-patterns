@@ -27,7 +27,7 @@ class Sequence:
     """This class defines a DNA sequence.
 
     Attributes:
-            complements: Dictionary of complementary nucleotides.
+        complements: Dictionary of complementary nucleotides.
     """
 
     complements = {"A": "T", "T": "A", "G": "C", "C": "G"}
@@ -44,8 +44,6 @@ class Sequence:
     def reverse_complement(self) -> str:
         """Finds the reverse complement of a sequence.
 
-        This method has linear time complexity.
-
         Returns:
             The reverse complement of the sequence.
         """
@@ -59,10 +57,8 @@ class Sequence:
 
         return rc
 
-    def pattern_count(self, pattern: str) -> int:
+    def pattern_count(self, pattern: str) -> Tuple[int, List[int]]:
         """Counts the number of times a pattern occurs in the sequence.
-
-        This method has linear time complexity.
 
         Args:
             pattern: The pattern that needs to be matched.
@@ -74,28 +70,41 @@ class Sequence:
         count = 0
         n = self.length
         k = len(pattern)
+        positions = []
         for i in range(n-k+1):
             if self.sequence[i:i+k] == pattern:
                 count += 1
+                positions.append(i)
 
-        return count
+        return count, positions
 
-    def frequency_table(self, k: int) -> Dict[str, int]:
+    def frequency_table(
+        self,
+        k: int,
+        window: Optional[str] = None,
+    ) -> Dict[str, int]:
         """Counts the frequency of all k-mers that occur in the sequence.
-
-        This method has linear time complexity.
 
         Args:
             k: Length of pattern (k-mer).
+            window: A subsequence that can be looked at instead of the full
+                sequence.
 
         Returns:
-            A dictionary that contains the frequencies for each k-mer in text.
+            A dictionary that contains the frequencies for each k-mer in the
+            sequence.
         """
 
         frequency_map = {}
-        n = self.length
+        if window is None:
+            n = self.length
+            sequence = self.sequence
+        else:
+            n = len(window)
+            sequence = window
+
         for i in range(n-k+1):
-            pattern = self.sequence[i:i+k]
+            pattern = sequence[i:i+k]
             count = frequency_map.get(pattern)
             if count is None:
                 frequency_map[pattern] = 1
@@ -107,8 +116,6 @@ class Sequence:
 
     def frequent_words(self, k: int) -> List[str]:
         """Searches for the most frequent patterns of length k in the sequence.
-
-        This method has linear time complexity.
 
         Args:
             k: Length of pattern (k-mer).
@@ -126,3 +133,28 @@ class Sequence:
                 frequent_patterns.append(key)
 
         return frequent_patterns
+
+    def find_clumps(self, k: int, L: int, t: int) -> List[str]:
+        """Searches for clumps of k-mers in the sequence.
+
+        Args:
+            k: Length of pattern (k-mer).
+            L: Length of window in the sequence that is looked at.
+            t: Minimum number of occurrences of the k-mer in the given window.
+
+        Returns:
+            A list of distinct k-mers that appear a minimum of t times in any
+            of the windows of length L.
+        """
+
+        patterns = []
+        n = self.length
+        for i in range(n-L+1):
+            window = self.sequence[i:i+L]
+            frequency_map = self.frequency_table(k, window = window)
+            for key, value in frequency_map.items():
+                if frequency_map[key] >= t:
+                    patterns.append(key)
+        patterns = list(set(patterns))
+
+        return patterns
