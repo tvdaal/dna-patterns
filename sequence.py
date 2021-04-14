@@ -3,8 +3,9 @@
 """
 
 
+from __future__ import annotations
 import numpy as np
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Type
 
 
 def parse_txt_file(path: str) -> List[str]:
@@ -78,6 +79,27 @@ class Sequence:
                 positions.append(i)
 
         return count, positions
+
+    def hamming_distance(self, sequence: Sequence) -> int:
+        """Counts the number of mismatches between two equal-length sequences.
+
+        Args:
+            sequence: The sequence against which a comparison is made.
+
+        Returns:
+            The number of mismatches between the two sequences, also referred
+            to as the Hamming distance.
+        """
+
+        seq_1 = self.sequence
+        seq_2 = sequence.sequence
+        assert self.length == len(seq_2), "Sequences are not of equal length."
+        hamming_distance = 0
+        for i in range(self.length):
+            if seq_1[i] != seq_2[i]:
+                hamming_distance += 1
+
+        return hamming_distance
 
     def frequency_table(
         self,
