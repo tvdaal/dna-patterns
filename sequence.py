@@ -1,13 +1,14 @@
+#!/usr/bin/env python3
 """This module supports analyses of DNA sequences.
 """
 
 
-import sys
-from typing import Optional, List, Tuple, Dict, Any, Callable, Iterable
+import numpy as np
+from typing import Optional, List, Tuple, Dict
 
 
 def parse_txt_file(path: str) -> List[str]:
-    """Parse contents of input text file, separated by spaces.
+    """Parses contents of input text file, separated by spaces.
 
     Args:
         path: Path to input text file.
@@ -32,7 +33,7 @@ class Sequence:
 
     complements = {"A": "T", "T": "A", "G": "C", "C": "G"}
 
-    def __init__(self, sequence: str):
+    def __init__(self, sequence: str) -> None:
         """Initializes the Sequence class.
 
         Args:
@@ -151,10 +152,33 @@ class Sequence:
         n = self.length
         for i in range(n-L+1):
             window = self.sequence[i:i+L]
-            frequency_map = self.frequency_table(k, window = window)
-            for key, value in frequency_map.items():
+            frequency_map = self.frequency_table(k, window=window)
+            for key, _ in frequency_map.items():
                 if frequency_map[key] >= t:
                     patterns.append(key)
         patterns = list(set(patterns))
 
         return patterns
+
+    def skew_graph(self) -> Tuple[List[int], List[int]]:
+        """Finds the G-C skew graph for the input sequence, incl. the minima.
+
+        Returns:
+            A list of skew scores for each position in the sequence.
+            Additionaly, a list of skew minima is returned.
+        """
+
+        skew_scores = [0]  # The skew graph starts at 0 by convention.
+        skew_minima = []
+        for i in range(self.length):
+            if self.sequence[i] == "G":
+                score = skew_scores[i] + 1
+            elif self.sequence[i] == "C":
+                score = skew_scores[i] - 1
+            else:
+                score = skew_scores[i]
+            skew_scores.append(score)
+        skew_array = np.array(skew_scores)
+        skew_minima = list(np.where(skew_array == skew_array.min())[0])
+
+        return skew_scores, skew_minima

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """This module is used for exc. 1.3.5 of the Bioinformatics Specialization.
 
   Example of how to run:
@@ -7,8 +8,8 @@
 
 
 import sys
-import time
 import sequence as seq
+import time
 
 
 start_time = time.time()
