@@ -7,7 +7,7 @@ study a given DNA sequence.
 This module cannot be run directly, but should be imported to another module
 or script.
 
-  Typical usage example for a different script:
+  Typical usage example for employing the Sequence class in a different script:
 
   import sequence as seq
   import sys
@@ -68,26 +68,29 @@ class Sequence:
             The reverse complement of the sequence.
         """
 
-        rc_list = []
+        rev_comp_list = []
         for nucleotide in self.sequence:
             complement = self.complements[nucleotide]
-            rc_list.append(complement)
-        rc_list.reverse()
-        rc = "".join(rc_list)
+            rev_comp_list.append(complement)
+        rev_comp_list.reverse()
+        rev_comp = "".join(rev_comp_list)
 
-        return rc
+        return rev_comp
 
     def pattern_count(
         self,
         pattern: Sequence,
+        hamming_thr: int = 0,
     ) -> Dict[str, Union[int, List[int]]]:
         """Counts the number of times a given pattern occurs in the sequence.
 
         Additionally, the positions of the matches are provided. Overlapping
-        patterns are allowed.
+        patterns are allowed, as well as imperfect matches.
 
         Args:
             pattern: The pattern that needs to be matched.
+            hamming_thr: If specified, this threshold provides the maximum
+                number of allowed mismatches with respect to the given pattern.
 
         Returns:
             The number of times the pattern occurs in the sequence, as well as
@@ -99,8 +102,12 @@ class Sequence:
 
         count = 0
         positions = []
-        for i in range(len(seq)-len(pat)+1):
-            if seq[i:i+len(pat)] == pat:
+        last_pos = len(seq) - len(pat) + 1
+        for i in range(last_pos):
+            sub_seq = seq[i:i+len(pat)]
+            sub_seq = Sequence(sub_seq)
+            hamming_dist = sub_seq.hamming_distance(pattern)
+            if hamming_dist <= hamming_thr:
                 count += 1
                 positions.append(i)
         results = {"Count": count, "Positions": positions}
@@ -153,7 +160,8 @@ class Sequence:
         string_length = len(seq)
 
         frequency_map = {}
-        for i in range(string_length-pattern_length+1):
+        last_pos = string_length - pattern_length + 1
+        for i in range(last_pos):
             pat = seq[i:i+pattern_length]
             count = frequency_map.get(pat)
             if count is None:
@@ -206,7 +214,8 @@ class Sequence:
         """
 
         patterns = []
-        for i in range(self.length-window_length+1):
+        last_pos = self.length - window_length + 1
+        for i in range(last_pos):
             window = self.sequence[i:i+window_length]
             window = Sequence(window)
             frequency_map = self.frequency_table(pattern_length, window=window)
