@@ -20,7 +20,7 @@ or script.
 
 from __future__ import annotations  # Needed for Python 3.10 type annotations for classes
 import numpy as np
-from typing import Optional, List, Tuple, Dict, Union
+from typing import Optional, List, Tuple, Dict, Set, Union
 
 
 def parse_txt_file(path: str) -> List[str]:
@@ -47,9 +47,11 @@ class Sequence:
     genome. The sequence is assumed to be of string format.
 
     Attributes:
+        nucleotides: Set of nucleotides.
         complements: Dictionary of complementary nucleotides.
     """
 
+    nucleotides = {"A", "T", "G", "C"}
     complements = {"A": "T", "T": "A", "G": "C", "C": "G"}
 
     def __init__(self, sequence: str) -> None:
@@ -80,7 +82,7 @@ class Sequence:
     def pattern_count(
         self,
         pattern: Sequence,
-        hamming_thr: int = 0,
+        hamming_max: int = 0,
     ) -> Dict[str, Union[int, List[int]]]:
         """Counts the number of times a given pattern occurs in the sequence.
 
@@ -89,8 +91,8 @@ class Sequence:
 
         Args:
             pattern: The pattern that needs to be matched.
-            hamming_thr: If specified, this threshold provides the maximum
-                number of allowed mismatches with respect to the given pattern.
+            hamming_max: The maximum number of allowed mismatches with respect
+                to the given pattern.
 
         Returns:
             The number of times the pattern occurs in the sequence, as well as
@@ -107,7 +109,7 @@ class Sequence:
             sub_seq = seq[i:i+len(pat)]
             sub_seq = Sequence(sub_seq)
             hamming_dist = sub_seq.hamming_distance(pattern)
-            if hamming_dist <= hamming_thr:
+            if hamming_dist <= hamming_max:
                 count += 1
                 positions.append(i)
         results = {"Count": count, "Positions": positions}
@@ -136,17 +138,58 @@ class Sequence:
 
         return hamming_distance
 
+    def neighbors(self, hamming_max: int) -> Set[str]:
+        """Defines the neighborhood for the sequence.
+
+        A neighborhood consists of all sequences that differ at most by
+        hamming_max from the given sequence.
+
+        Args:
+            hamming_max: The maximum number of allowed mismatches with respect
+                to the sequence.
+
+        Returns:
+            A set of patterns that are neighbors to the input sequence.
+        """
+
+        seq = self.sequence
+        if hamming_max == 0:
+            return {seq}
+        if self.length == 1:
+            return self.nucleotides
+
+        suffix = seq[1:]
+        suffix = Sequence(suffix)
+        suffix_neighborhood = suffix.neighbors(hamming_max)
+
+        neighborhood = set()
+        for pattern in suffix_neighborhood:
+            pattern = Sequence(pattern)
+            if suffix.hamming_distance(pattern) < hamming_max:
+                for nucleotide in self.nucleotides:
+                    neighborhood.add(nucleotide + pattern.sequence)
+            else:
+                neighborhood.add(seq[0] + pattern.sequence)
+
+        return neighborhood
+
     def frequency_table(
         self,
         pattern_length: int,
         window: Optional[Sequence] = None,
+        hamming_max: int = 0,
     ) -> Dict[str, int]:
         """Counts the frequency of all patterns that occur in the sequence.
+
+        Approximate occurrences of a given pattern can be accounted for too
+        with the hamming_max parameter.
 
         Args:
             pattern_length: Fixed length of patterns that will be looked at.
             window: A subsequence that can be looked at instead of the full
                 sequence at hand.
+            hamming_max: The maximum number of allowed mismatches between
+                similar patterns.
 
         Returns:
             A dictionary that contains the frequencies for each pattern that
@@ -163,20 +206,32 @@ class Sequence:
         last_pos = string_length - pattern_length + 1
         for i in range(last_pos):
             pat = seq[i:i+pattern_length]
-            count = frequency_map.get(pat)
-            if count is None:
-                frequency_map[pat] = 1
-            else:
-                count += 1
-                frequency_map[pat] = count
+            pat = Sequence(pat)
+            neighborhood = pat.neighbors(hamming_max)
+            for neighbor in neighborhood:
+                count = frequency_map.get(neighbor)
+                if count is None:
+                    frequency_map[neighbor] = 1
+                else:
+                    count += 1
+                    frequency_map[neighbor] = count
 
         return frequency_map
 
-    def frequent_words(self, pattern_length: int) -> List[str]:
+    def frequent_words(
+        self,
+        pattern_length: int,
+        hamming_max: int = 0,
+    ) -> List[str]:
         """Searches for the most frequent patterns in the sequence.
+
+        Approximate occurrences of a given pattern can be accounted for too
+        with the hamming_max parameter.
 
         Args:
             pattern_length: Fixed length of patterns.
+            hamming_max: The maximum number of allowed mismatches between
+                similar patterns.
 
         Returns:
             A list of most frequent patterns of fixed length that appear in the
@@ -184,7 +239,10 @@ class Sequence:
         """
 
         frequent_patterns = []
-        frequency_map = self.frequency_table(pattern_length)
+        frequency_map = self.frequency_table(
+            pattern_length,
+            hamming_max=hamming_max,
+        )
         max_count = max(frequency_map.items(), key = lambda x: x[1])[1]
 
         for key, value in frequency_map.items():
