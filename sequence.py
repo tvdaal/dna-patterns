@@ -1,15 +1,30 @@
 #!/usr/bin/env python3
 """This module supports analyses of DNA sequences.
+
+Its main object is the Sequence class. This class contains many methods to
+study a given DNA sequence.
+
+This module cannot be run directly, but should be imported to another module
+or script.
+
+  Typical usage example for a different script:
+
+  import sequence as seq
+  import sys
+  input_path = sys.argv[1]
+  contents = seq.parse_txt_file(input_path)
+  sequence = seq.Sequence(contents[0])
+  rev_complement = sequence.reverse_complement()
 """
 
 
-from __future__ import annotations
+from __future__ import annotations  # Needed for Python 3.10 type annotations for classes
 import numpy as np
-from typing import Optional, List, Tuple, Dict, Type
+from typing import Optional, List, Tuple, Dict, Union
 
 
 def parse_txt_file(path: str) -> List[str]:
-    """Parses contents of input text file, separated by spaces.
+    """Parses contents of an input text file, separated by spaces.
 
     Args:
         path: Path to input text file.
@@ -26,7 +41,10 @@ def parse_txt_file(path: str) -> List[str]:
 
 
 class Sequence:
-    """This class defines a DNA sequence.
+    """This class defines a sequence of nucleotides, i.e. a piece of DNA.
+
+    The meaning of the sequence can range from a simple pattern to an entire
+    genome. The sequence is assumed to be of string format.
 
     Attributes:
         complements: Dictionary of complementary nucleotides.
@@ -38,13 +56,13 @@ class Sequence:
         """Initializes the Sequence class.
 
         Args:
-            sequence: Input DNA sequence.
+            sequence: Input sequence.
         """
         self.sequence = sequence
         self.length = len(sequence)
 
     def reverse_complement(self) -> str:
-        """Finds the reverse complement of a sequence.
+        """Finds the reverse complement of the sequence.
 
         Returns:
             The reverse complement of the sequence.
@@ -59,26 +77,35 @@ class Sequence:
 
         return rc
 
-    def pattern_count(self, pattern: str) -> Tuple[int, List[int]]:
-        """Counts the number of times a pattern occurs in the sequence.
+    def pattern_count(
+        self,
+        pattern: Sequence,
+    ) -> Dict[str, Union[int, List[int]]]:
+        """Counts the number of times a given pattern occurs in the sequence.
+
+        Additionally, the positions of the matches are provided. Overlapping
+        patterns are allowed.
 
         Args:
             pattern: The pattern that needs to be matched.
 
         Returns:
-            The number of times the pattern occurs in the sequence.
+            The number of times the pattern occurs in the sequence, as well as
+            the positions of where they occur.
         """
 
+        seq = self.sequence
+        pat = pattern.sequence
+
         count = 0
-        n = self.length
-        k = len(pattern)
         positions = []
-        for i in range(n-k+1):
-            if self.sequence[i:i+k] == pattern:
+        for i in range(len(seq)-len(pat)+1):
+            if seq[i:i+len(pat)] == pat:
                 count += 1
                 positions.append(i)
+        results = {"Count": count, "Positions": positions}
 
-        return count, positions
+        return results
 
     def hamming_distance(self, sequence: Sequence) -> int:
         """Counts the number of mismatches between two equal-length sequences.
@@ -93,9 +120,10 @@ class Sequence:
 
         seq_1 = self.sequence
         seq_2 = sequence.sequence
-        assert self.length == len(seq_2), "Sequences are not of equal length."
+        assert len(seq_1) == len(seq_2), "The sequences are not of equal length."
+
         hamming_distance = 0
-        for i in range(self.length):
+        for i in range(len(seq_1)):
             if seq_1[i] != seq_2[i]:
                 hamming_distance += 1
 
@@ -103,52 +131,52 @@ class Sequence:
 
     def frequency_table(
         self,
-        k: int,
-        window: Optional[str] = None,
+        pattern_length: int,
+        window: Optional[Sequence] = None,
     ) -> Dict[str, int]:
-        """Counts the frequency of all k-mers that occur in the sequence.
+        """Counts the frequency of all patterns that occur in the sequence.
 
         Args:
-            k: Length of pattern (k-mer).
+            pattern_length: Fixed length of patterns that will be looked at.
             window: A subsequence that can be looked at instead of the full
-                sequence.
+                sequence at hand.
 
         Returns:
-            A dictionary that contains the frequencies for each k-mer in the
-            sequence.
+            A dictionary that contains the frequencies for each pattern that
+            occurs in the sequence.
         """
 
-        frequency_map = {}
         if window is None:
-            n = self.length
-            sequence = self.sequence
+            seq = self.sequence
         else:
-            n = len(window)
-            sequence = window
+            seq = window.sequence
+        string_length = len(seq)
 
-        for i in range(n-k+1):
-            pattern = sequence[i:i+k]
-            count = frequency_map.get(pattern)
+        frequency_map = {}
+        for i in range(string_length-pattern_length+1):
+            pat = seq[i:i+pattern_length]
+            count = frequency_map.get(pat)
             if count is None:
-                frequency_map[pattern] = 1
+                frequency_map[pat] = 1
             else:
                 count += 1
-                frequency_map[pattern] = count
+                frequency_map[pat] = count
 
         return frequency_map
 
-    def frequent_words(self, k: int) -> List[str]:
-        """Searches for the most frequent patterns of length k in the sequence.
+    def frequent_words(self, pattern_length: int) -> List[str]:
+        """Searches for the most frequent patterns in the sequence.
 
         Args:
-            k: Length of pattern (k-mer).
+            pattern_length: Fixed length of patterns.
 
         Returns:
-            A list of most frequent k-mers that appear in the sequence.
+            A list of most frequent patterns of fixed length that appear in the
+            sequence.
         """
 
         frequent_patterns = []
-        frequency_map = self.frequency_table(k)
+        frequency_map = self.frequency_table(pattern_length)
         max_count = max(frequency_map.items(), key = lambda x: x[1])[1]
 
         for key, value in frequency_map.items():
@@ -157,40 +185,50 @@ class Sequence:
 
         return frequent_patterns
 
-    def find_clumps(self, k: int, L: int, t: int) -> List[str]:
-        """Searches for clumps of k-mers in the sequence.
+    def find_clumps(
+        self,
+        pattern_length: int,
+        window_length: int,
+        min_occur: int,
+    ) -> Dict[str, Union[int, List[str]]]:
+        """Searches for clumps of identical patterns in the sequence.
 
         Args:
-            k: Length of pattern (k-mer).
-            L: Length of window in the sequence that is looked at.
-            t: Minimum number of occurrences of the k-mer in the given window.
+            pattern_length: Fixed length of patterns.
+            window_length: Length of window in the sequence that is looked at.
+            min_occur: Minimum number of occurrences of the pattern in the
+                given window.
 
         Returns:
-            A list of distinct k-mers that appear a minimum of t times in any
-            of the windows of length L.
+            A list of distinct patterns that appear a minimum of min_occur
+            times in any of the windows of given length. Also the number of
+            different patterns is given.
         """
 
         patterns = []
-        n = self.length
-        for i in range(n-L+1):
-            window = self.sequence[i:i+L]
-            frequency_map = self.frequency_table(k, window=window)
+        for i in range(self.length-window_length+1):
+            window = self.sequence[i:i+window_length]
+            window = Sequence(window)
+            frequency_map = self.frequency_table(pattern_length, window=window)
             for key, _ in frequency_map.items():
-                if frequency_map[key] >= t:
+                if frequency_map[key] >= min_occur:
                     patterns.append(key)
+
         patterns = list(set(patterns))
+        number_patterns = len(patterns)
+        results = {"Number": number_patterns, "Patterns": patterns}
 
-        return patterns
+        return results
 
-    def skew_graph(self) -> Tuple[List[int], List[int]]:
-        """Finds the G-C skew graph for the input sequence, incl. the minima.
+    def skew_graph(self) -> Dict[str, List[int]]:
+        """Finds the G-C skew graph for the input sequence, incl. its minima.
 
         Returns:
             A list of skew scores for each position in the sequence.
             Additionaly, a list of skew minima is returned.
         """
 
-        skew_scores = [0]  # The skew graph starts at 0 by convention.
+        skew_scores = [0]  # The skew graph with a zero by convention.
         skew_minima = []
         for i in range(self.length):
             if self.sequence[i] == "G":
@@ -200,7 +238,9 @@ class Sequence:
             else:
                 score = skew_scores[i]
             skew_scores.append(score)
+
         skew_array = np.array(skew_scores)
         skew_minima = list(np.where(skew_array == skew_array.min())[0])
+        results = {"Skew scores": skew_scores, "Skew minima": skew_minima}
 
-        return skew_scores, skew_minima
+        return results

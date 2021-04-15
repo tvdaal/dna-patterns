@@ -7,8 +7,8 @@
 """
 
 
-import sys
 import sequence as seq
+import sys
 import time
 
 
@@ -18,10 +18,10 @@ contents = seq.parse_txt_file(input_path)
 text = contents[0]
 
 sequence = seq.Sequence(text)
-skew_scores, _ = sequence.skew_graph()
-skew_scores = [str(score) for score in skew_scores]
+results = sequence.skew_graph()
+skew_scores = [str(score) for score in results["Skew scores"]]
 skew_scores = " ".join(skew_scores)
 print("\nSkew scores:\n\n{}\n".format(skew_scores))
 
-elapsed_time = round(time.time() - start_time)
+elapsed_time = round(time.time() - start_time, 2)
 print("This program took", elapsed_time, "seconds to run.\n")

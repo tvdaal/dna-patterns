@@ -7,8 +7,8 @@
 """
 
 
-import sys
 import sequence as seq
+import sys
 import time
 
 
@@ -18,11 +18,10 @@ contents = seq.parse_txt_file(input_path)
 text = contents[0]
 
 sequence = seq.Sequence(text)
-_, skew_minima = sequence.skew_graph()
-print(skew_minima)
-skew_minima = [str(minimum) for minimum in skew_minima]
+results = sequence.skew_graph()
+skew_minima = [str(minimum) for minimum in results["Skew minima"]]
 skew_minima = " ".join(skew_minima)
 print("\nSkew minima:\n\n{}\n".format(skew_minima))
 
-elapsed_time = round(time.time() - start_time)
+elapsed_time = round(time.time() - start_time, 2)
 print("This program took", elapsed_time, "seconds to run.\n")

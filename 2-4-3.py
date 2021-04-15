@@ -7,8 +7,8 @@
 """
 
 
-import sys
 import sequence as seq
+import sys
 import time
 
 
@@ -20,7 +20,7 @@ text_1, text_2 = contents
 sequence_1 = seq.Sequence(text_1)
 sequence_2 = seq.Sequence(text_2)
 hamming_distance = sequence_1.hamming_distance(sequence_2)
-print("\nThe Hamming distance between the two strings:\n\n{}\n".format(hamming_distance))
+print("\nThe Hamming distance between the two sequences:\n\n{}\n".format(hamming_distance))
 
-elapsed_time = round(time.time() - start_time)
+elapsed_time = round(time.time() - start_time, 2)
 print("This program took", elapsed_time, "seconds to run.\n")

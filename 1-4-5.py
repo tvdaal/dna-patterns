@@ -7,20 +7,20 @@
 """
 
 
-import sys
 import sequence as seq
+import sys
 import time
 
 
 start_time = time.time()
 input_path = sys.argv[1]
 contents = seq.parse_txt_file(input_path)
-text, k, L, t = contents
+text_1, text_2, text_3, text_4 = contents
 
-sequence = seq.Sequence(text)
-patterns = sequence.find_clumps(int(k), int(L), int(t))
-patterns = " ".join(patterns)
-print("\nDistinct k-mers that form clumps:\n\n{}\n".format(patterns))
+sequence = seq.Sequence(text_1)
+results = sequence.find_clumps(int(text_2), int(text_3), int(text_4))
+patterns = " ".join(results["Patterns"])
+print("\nDistinct patterns that form clumps in the given sequence:\n\n{}\n".format(patterns))
 
-elapsed_time = round(time.time() - start_time)
+elapsed_time = round(time.time() - start_time, 2)
 print("This program took", elapsed_time, "seconds to run.\n")

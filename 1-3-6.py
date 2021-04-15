@@ -7,22 +7,24 @@
 """
 
 
-import sys
 import sequence as seq
+import sys
 import time
 
 
 start_time = time.time()
 input_path = sys.argv[1]
 contents = seq.parse_txt_file(input_path)
-text = contents[0]
-pattern = "CTTGATCAT"
+text_1 = contents[0]
+text_2 = "CTTGATCAT"
 
-sequence = seq.Sequence(text)
-_, positions_list = sequence.pattern_count(pattern)
+sequence = seq.Sequence(text_1)
+pattern = seq.Sequence(text_2)
+results = sequence.pattern_count(pattern)
+positions_list = results["Positions"]
 position_strings = [str(position) for position in positions_list]
 positions = " ".join(position_strings)
 print("\nStarting positions of the pattern:\n\n{}\n".format(positions))
 
-elapsed_time = round(time.time() - start_time)
+elapsed_time = round(time.time() - start_time, 2)
 print("This program took", elapsed_time, "seconds to run.\n")
