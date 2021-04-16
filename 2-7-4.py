@@ -21,7 +21,7 @@ sequence = seq.Sequence(text_1)
 neighborhood = sequence.neighbors(int(text_2))
 neighbors = [str(pattern) for pattern in neighborhood]
 neighbors = " ".join(neighbors)
-print("\nNeighborhood:\n\n{}\n".format(neighbors))
+print("\nThe neighborhood consists of the following {} patterns:\n\n{}\n".format(len(neighborhood), neighbors))
 
 elapsed_time = round(time.time() - start_time, 2)
 print("This program took", elapsed_time, "seconds to run.\n")

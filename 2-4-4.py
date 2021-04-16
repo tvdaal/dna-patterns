@@ -19,7 +19,7 @@ text_2, text_1, text_3 = contents
 
 sequence = seq.Sequence(text_1)
 pattern = seq.Sequence(text_2)
-results = sequence.pattern_count(pattern, hamming_thr=int(text_3))
+results = sequence.pattern_count(pattern, hamming_max=int(text_3))
 positions_list = results["Positions"]
 position_strings = [str(position) for position in positions_list]
 positions = " ".join(position_strings)

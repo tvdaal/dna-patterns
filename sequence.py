@@ -261,14 +261,20 @@ class Sequence:
         pattern_length: int,
         window_length: int,
         min_occur: int,
+        hamming_max: int = 0,
+        reverse: bool = True,
     ) -> Dict[str, Union[int, List[str]]]:
-        """Searches for clumps of identical patterns in the sequence.
+        """Searches for clumps of (almost) identical patterns in the sequence.
 
         Args:
             pattern_length: Fixed length of patterns.
             window_length: Length of window in the sequence that is looked at.
             min_occur: Minimum number of occurrences of the pattern in the
                 given window.
+            hamming_max: The maximum number of allowed mismatches between
+                similar patterns.
+            reverse: If True then reverse complementary patterns are taken into
+                account as well.
 
         Returns:
             A list of distinct patterns that appear a minimum of min_occur
@@ -281,7 +287,11 @@ class Sequence:
         for i in range(last_pos):
             window = self.sequence[i:i+window_length]
             window = Sequence(window)
-            frequency_map = window.frequency_table(pattern_length)
+            frequency_map = window.frequency_table(
+                pattern_length,
+                hamming_max=hamming_max,
+                reverse=reverse,
+            )
             for key, _ in frequency_map.items():
                 if frequency_map[key] >= min_occur:
                     patterns.append(key)
