@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""This module is used for exc. 2.4.9 of the Bioinformatics Specialization.
+"""This module is used for exc. 2.4.10 of the Bioinformatics Specialization.
 
   Example of how to run:
 
-  python 2-4-9.py /Users/tvdaal/Dropbox/Tom/CS/Bioinformatics/Datasets/2-4-9.txt
+  python 2-4-10.py /Users/tvdaal/Dropbox/Tom/CS/Bioinformatics/Datasets/2-4-10.txt
 """
 
 
@@ -18,11 +18,7 @@ contents = seq.parse_txt_file(input_path)
 text_1, text_2, text_3 = contents
 
 sequence = seq.Sequence(text_1)
-patterns = sequence.frequent_words(
-    int(text_2),
-    hamming_max=int(text_3),
-    reverse=False,
-)
+patterns = sequence.frequent_words(int(text_2),hamming_max=int(text_3))
 patterns = " ".join(patterns)
 print("\nMost frequent (approximate) patterns:\n\n{}\n".format(patterns))
 

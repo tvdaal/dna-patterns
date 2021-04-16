@@ -18,8 +18,8 @@ contents = seq.parse_txt_file(input_path)
 text = contents[0]
 
 sequence = seq.Sequence(text)
-rc = sequence.reverse_complement()
-print("\nReverse complement:\n\n{}\n".format(rc))
+rev_comp = sequence.reverse_complement()
+print("\nReverse complement:\n\n{}\n".format(rev_comp.sequence))
 
 elapsed_time = round(time.time() - start_time, 2)
 print("This program took", elapsed_time, "seconds to run.\n")

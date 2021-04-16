@@ -63,7 +63,7 @@ class Sequence:
         self.sequence = sequence
         self.length = len(sequence)
 
-    def reverse_complement(self) -> str:
+    def reverse_complement(self) -> Sequence:
         """Finds the reverse complement of the sequence.
 
         Returns:
@@ -76,6 +76,7 @@ class Sequence:
             rev_comp_list.append(complement)
         rev_comp_list.reverse()
         rev_comp = "".join(rev_comp_list)
+        rev_comp = Sequence(rev_comp)
 
         return rev_comp
 
@@ -176,8 +177,8 @@ class Sequence:
     def frequency_table(
         self,
         pattern_length: int,
-        window: Optional[Sequence] = None,
         hamming_max: int = 0,
+        reverse: bool = True,
     ) -> Dict[str, int]:
         """Counts the frequency of all patterns that occur in the sequence.
 
@@ -186,35 +187,35 @@ class Sequence:
 
         Args:
             pattern_length: Fixed length of patterns that will be looked at.
-            window: A subsequence that can be looked at instead of the full
-                sequence at hand.
             hamming_max: The maximum number of allowed mismatches between
                 similar patterns.
+            reverse: If True then reverse complementary patterns are taken into
+                account as well.
 
         Returns:
             A dictionary that contains the frequencies for each pattern that
             occurs in the sequence.
         """
 
-        if window is None:
-            seq = self.sequence
-        else:
-            seq = window.sequence
-        string_length = len(seq)
-
+        patterns = []
         frequency_map = {}
-        last_pos = string_length - pattern_length + 1
+        last_pos = self.length - pattern_length + 1
         for i in range(last_pos):
-            pat = seq[i:i+pattern_length]
+            pat = self.sequence[i:i+pattern_length]
             pat = Sequence(pat)
-            neighborhood = pat.neighbors(hamming_max)
-            for neighbor in neighborhood:
-                count = frequency_map.get(neighbor)
-                if count is None:
-                    frequency_map[neighbor] = 1
-                else:
-                    count += 1
-                    frequency_map[neighbor] = count
+            patterns.append(pat)
+            if reverse == True:
+                pat_rc = pat.reverse_complement()
+                patterns.append(pat_rc)
+            for pattern in patterns:
+                neighborhood = pattern.neighbors(hamming_max)
+                for neighbor in neighborhood:
+                    count = frequency_map.get(neighbor)
+                    if count is None:
+                        frequency_map[neighbor] = 1
+                    else:
+                        count += 1
+                        frequency_map[neighbor] = count
 
         return frequency_map
 
@@ -222,6 +223,7 @@ class Sequence:
         self,
         pattern_length: int,
         hamming_max: int = 0,
+        reverse: bool = True,
     ) -> List[str]:
         """Searches for the most frequent patterns in the sequence.
 
@@ -232,6 +234,8 @@ class Sequence:
             pattern_length: Fixed length of patterns.
             hamming_max: The maximum number of allowed mismatches between
                 similar patterns.
+            reverse: If True then reverse complementary patterns are taken into
+                account as well.
 
         Returns:
             A list of most frequent patterns of fixed length that appear in the
@@ -242,6 +246,7 @@ class Sequence:
         frequency_map = self.frequency_table(
             pattern_length,
             hamming_max=hamming_max,
+            reverse=reverse,
         )
         max_count = max(frequency_map.items(), key = lambda x: x[1])[1]
 
@@ -276,7 +281,7 @@ class Sequence:
         for i in range(last_pos):
             window = self.sequence[i:i+window_length]
             window = Sequence(window)
-            frequency_map = self.frequency_table(pattern_length, window=window)
+            frequency_map = window.frequency_table(pattern_length)
             for key, _ in frequency_map.items():
                 if frequency_map[key] >= min_occur:
                     patterns.append(key)
