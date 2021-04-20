@@ -33,11 +33,30 @@ def parse_txt_file(path: str) -> List[str]:
         The contents of the text file as a list of strings.
     """
 
-    f = open(path, "r")
-    contents = str(f.read())
-    f.close()
+    file = open(path, "r")
+    contents = file.read()
+    text = contents.split()
+    file.close()
 
-    return contents.split()
+    return text
+
+
+def parse_fasta_file(path: str) -> str:
+    """Parses contents of an input text file in FASTA format.
+
+    Args:
+        path: Path to input text file.
+
+    Returns:
+        The sequence.
+    """
+
+    file = open(path, "r")
+    contents = file.readlines()
+    text = "".join(contents[1:]).replace("\n", "")
+    file.close()
+
+    return text
 
 
 class Sequence:
@@ -197,12 +216,12 @@ class Sequence:
             occurs in the sequence.
         """
 
-        patterns = []
         frequency_map = {}
         last_pos = self.length - pattern_length + 1
         for i in range(last_pos):
             pat = self.sequence[i:i+pattern_length]
             pat = Sequence(pat)
+            patterns = []
             patterns.append(pat)
             if reverse == True:
                 pat_rc = pat.reverse_complement()
@@ -264,7 +283,10 @@ class Sequence:
         hamming_max: int = 0,
         reverse: bool = True,
     ) -> Dict[str, Union[int, List[str]]]:
-        """Searches for clumps of (almost) identical patterns in the sequence.
+        """Searches for clumps of patterns in the sequence.
+
+        Approximate occurrences of a given pattern can be accounted for too
+        with the hamming_max parameter.
 
         Args:
             pattern_length: Fixed length of patterns.
