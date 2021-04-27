@@ -19,7 +19,9 @@ or script.
 
 
 from __future__ import annotations  # Needed for Python 3.10 type annotations for classes
+import itertools
 import numpy as np
+import sys
 from typing import Optional, List, Tuple, Dict, Set, Union
 
 
@@ -146,11 +148,15 @@ class Sequence:
         Returns:
             The number of mismatches between the two sequences, also referred
             to as the Hamming distance.
+
+        Raises:
+            ValueError: If the sequences are not of equal length.
         """
 
         seq_1 = self.sequence
         seq_2 = sequence.sequence
-        assert len(seq_1) == len(seq_2), "The sequences are not of equal length."
+        if len(seq_1) != len(seq_2):
+            raise ValueError("The sequences are not of equal length.")
 
         hamming_distance = 0
         for i in range(len(seq_1)):
@@ -224,7 +230,7 @@ class Sequence:
             pat = Sequence(pat)
             patterns = []
             patterns.append(pat)
-            if reverse == True:
+            if reverse:
                 pat_rc = pat.reverse_complement()
                 patterns.append(pat_rc)
             for pattern in patterns:
@@ -360,13 +366,81 @@ class Sequence:
                     count = seq.pattern_count(pattern, hamming_max)["Count"]
                     if count == 0:
                         break
-                    else:
-                        counts.append(count)
+                    counts.append(count)
                 if len(counts) == len(sequences): # The pattern then appears in all sequences.
                     motifs.add(neighbor)
 
         return motifs
 
+    def distance_pattern_strings(
+        self,
+        sequences: List[Sequence],
+        pattern: Sequence,
+    ) -> int:
+        """Calculates the sum of distances between the pattern and each string.
+
+        The Hamming distance is minimized for each sequence, respecting a fixed
+        pattern length.
+
+        Args:
+            sequences: Collection of sequences that will be searched for
+                patterns.
+            pattern: The reference pattern.
+
+        Returns:
+            The total (minimum) Hamming distance between the pattern and the
+            collection of sequences.
+        """
+
+        strings = [self]
+        strings.extend(sequences)
+
+        total_distance = 0
+        for string in strings:
+            distance = sys.maxsize
+            frequencies = string.frequency_table(pattern.length, reverse=False)
+            for key in frequencies.keys():
+                sub_sequence = Sequence(key)
+                hamming_distance = pattern.hamming_distance(sub_sequence)
+                if distance > hamming_distance:
+                    distance = hamming_distance
+            total_distance += distance
+
+        return total_distance
+
+    def median_string(
+        self,
+        sequences: List[Sequence],
+        pattern_length: int,
+    ) -> str:
+        """Finds the median string for the given collection of sequences.
+
+        The Hamming distance is minimized for each sequence, respecting a fixed
+        length of pattern_length.
+
+        Args:
+            sequences: Collection of sequences that will be searched for
+                patterns.
+            pattern_length: Fixed length of patterns.
+
+        Returns:
+            The median string for the collection of sequences.
+        """
+
+        min_distance = sys.maxsize
+        generated_patterns = itertools.product(
+            list(self.nucleotides),
+            repeat=pattern_length,
+        )
+        patterns = ["".join(list(tup)) for tup in list(generated_patterns)]
+        for pattern in patterns:
+            pattern = Sequence(pattern)
+            total_distance = self.distance_pattern_strings(sequences, pattern)
+            if min_distance > total_distance:
+                min_distance = total_distance
+                median_string = pattern.sequence
+
+        return median_string
 
     def skew_graph(self) -> Dict[str, List[int]]:
         """Finds the G-C skew graph for the input sequence, incl. its minima.
