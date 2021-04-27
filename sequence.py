@@ -107,7 +107,8 @@ class Sequence:
         """Counts the number of times a given pattern occurs in the sequence.
 
         Additionally, the positions of the matches are provided. Overlapping
-        patterns are allowed, as well as imperfect matches.
+        patterns are allowed, as well as imperfect matches (controlled by the
+        hamminx_max parameter).
 
         Args:
             pattern: The pattern that needs to be matched.
@@ -324,6 +325,49 @@ class Sequence:
 
         return results
 
+    def find_motifs(
+        self,
+        sequences: List[Sequence],
+        pattern_length: int,
+        hamming_max: int,
+    ) -> Set[str]:
+        """Finds regulatory motifs across the sequences in a brute force way.
+
+        The motif has to occur in every single sequence. Minor mismatches are
+        allowed and controlled by the hamming_max parameter.
+
+        Args:
+            sequences: Collection of sequences that will be searched for
+                patterns.
+            pattern_length: Fixed length of patterns.
+            hamming_max: The maximum number of allowed mismatches between
+                similar patterns.
+
+        Returns:
+            A set of regulatory motifs.
+        """
+
+        motifs = set()
+        last_pos = self.length - pattern_length + 1
+        for i in range(last_pos):
+            pat = self.sequence[i:i+pattern_length]
+            pat = Sequence(pat)
+            neighborhood = pat.neighbors(hamming_max)
+            for neighbor in neighborhood:
+                pattern = Sequence(neighbor)
+                counts = []
+                for seq in sequences:
+                    count = seq.pattern_count(pattern, hamming_max)["Count"]
+                    if count == 0:
+                        break
+                    else:
+                        counts.append(count)
+                if len(counts) == len(sequences): # The pattern then appears in all sequences.
+                    motifs.add(neighbor)
+
+        return motifs
+
+
     def skew_graph(self) -> Dict[str, List[int]]:
         """Finds the G-C skew graph for the input sequence, incl. its minima.
 
@@ -332,7 +376,7 @@ class Sequence:
             Additionaly, a list of skew minima is returned.
         """
 
-        skew_scores = [0]  # The skew graph with a zero by convention.
+        skew_scores = [0]  # The skew graph starts with a zero by convention.
         skew_minima = []
         for i in range(self.length):
             if self.sequence[i] == "G":

@@ -33,9 +33,9 @@ def construct_argparser() -> ArgumentParser:
         An argument parser.
     """
 
-    def str2bool(arg):
+    def str_to_bool(arg):
         if isinstance(arg, bool):
-           return arg
+            return arg
         if arg.lower() in ("yes", "true", "y", "1"):
             return True
         elif arg.lower() in ("no", "false", "n", "0"):
@@ -75,7 +75,7 @@ def construct_argparser() -> ArgumentParser:
     )
     parser.add_argument(
         "--reverse",
-        type=str2bool,
+        type=str_to_bool,
         default=True,
         help="Specify whether reverse complementary patterns should be taken into account as well.",
     )
