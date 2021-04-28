@@ -16,7 +16,6 @@ candidates for the DnaA boxes of the genome.
     For more information on the various optional parameters run:
 
     python find_dnaa_box.py --help
-
 """
 
 

@@ -331,6 +331,31 @@ class Sequence:
 
         return results
 
+    def skew_graph(self) -> Dict[str, List[int]]:
+        """Finds the G-C skew graph for the input sequence, incl. its minima.
+
+        Returns:
+            A list of skew scores for each position in the sequence.
+            Additionaly, a list of skew minima is returned.
+        """
+
+        skew_scores = [0]  # The skew graph starts with a zero by convention.
+        skew_minima = []
+        for i in range(self.length):
+            if self.sequence[i] == "G":
+                score = skew_scores[i] + 1
+            elif self.sequence[i] == "C":
+                score = skew_scores[i] - 1
+            else:
+                score = skew_scores[i]
+            skew_scores.append(score)
+
+        skew_array = np.array(skew_scores)
+        skew_minima = list(np.where(skew_array == skew_array.min())[0])
+        results = {"Skew scores": skew_scores, "Skew minima": skew_minima}
+
+        return results
+
     def find_motifs(
         self,
         sequences: List[Sequence],
@@ -442,27 +467,31 @@ class Sequence:
 
         return median_string
 
-    def skew_graph(self) -> Dict[str, List[int]]:
-        """Finds the G-C skew graph for the input sequence, incl. its minima.
+    def most_probable_string(
+        self,
+        pattern_length: int,
+        profile_matrix: Dict[str, List[float]],
+    ) -> str:
+        """Finds the profile-most probably string in a given sequence.
+
+        Args:
+            pattern_length: Fixed length of patterns.
+            profile_matrix: The profile matrix for an unspecified collection of
+                sequences.
 
         Returns:
-            A list of skew scores for each position in the sequence.
-            Additionaly, a list of skew minima is returned.
+            The profile-most probably string.
         """
 
-        skew_scores = [0]  # The skew graph starts with a zero by convention.
-        skew_minima = []
-        for i in range(self.length):
-            if self.sequence[i] == "G":
-                score = skew_scores[i] + 1
-            elif self.sequence[i] == "C":
-                score = skew_scores[i] - 1
-            else:
-                score = skew_scores[i]
-            skew_scores.append(score)
+        frequencies = self.frequency_table(pattern_length, reverse=False)
+        highest_prob = 0.0
+        for pattern in frequencies.keys():
+            total_prob = 1.0
+            for i, nucleotide in enumerate(pattern):
+                prob = profile_matrix[nucleotide][i]
+                total_prob *= prob
+            if total_prob > highest_prob:
+                highest_prob = total_prob
+                most_prob_string = pattern
 
-        skew_array = np.array(skew_scores)
-        skew_minima = list(np.where(skew_array == skew_array.min())[0])
-        results = {"Skew scores": skew_scores, "Skew minima": skew_minima}
-
-        return results
+        return most_prob_string
