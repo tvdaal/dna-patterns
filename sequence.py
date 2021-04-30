@@ -200,6 +200,25 @@ class Sequence:
 
         return neighborhood
 
+    def list_patterns(self, pattern_length: int) -> List[str]:
+        """Finds all unique patterns of given length in a given sequence.
+
+        Args:
+            pattern_length: Fixed length of patterns.
+
+        Returns:
+            List of unique patterns.
+        """
+
+        patterns = []
+        last_pos = self.length - pattern_length + 1
+        for i in range(last_pos):
+            pattern = self.sequence[i:i+pattern_length]
+            if pattern not in patterns:
+                patterns.append(pattern)
+
+        return patterns
+
     def frequency_table(
         self,
         pattern_length: int,
@@ -224,17 +243,16 @@ class Sequence:
         """
 
         frequency_map = {}
-        last_pos = self.length - pattern_length + 1
-        for i in range(last_pos):
-            pat = self.sequence[i:i+pattern_length]
-            pat = Sequence(pat)
-            patterns = []
-            patterns.append(pat)
+        patterns = self.list_patterns(pattern_length)
+        for pattern in patterns:
+            pattern = Sequence(pattern)
+            all_patterns = []
+            all_patterns.append(pattern)
             if reverse:
-                pat_rc = pat.reverse_complement()
-                patterns.append(pat_rc)
-            for pattern in patterns:
-                neighborhood = pattern.neighbors(hamming_max)
+                pattern_rc = pattern.reverse_complement()
+                all_patterns.append(pattern_rc)
+            for pat in all_patterns:
+                neighborhood = pat.neighbors(hamming_max)
                 for neighbor in neighborhood:
                     count = frequency_map.get(neighbor)
                     if count is None:
@@ -392,7 +410,7 @@ class Sequence:
                     if count == 0:
                         break
                     counts.append(count)
-                if len(counts) == len(sequences): # The pattern then appears in all sequences.
+                if len(counts) == len(sequences):  # The pattern then appears in all sequences.
                     motifs.add(neighbor)
 
         return motifs
@@ -423,8 +441,8 @@ class Sequence:
         total_distance = 0
         for string in strings:
             distance = sys.maxsize
-            frequencies = string.frequency_table(pattern.length, reverse=False)
-            for key in frequencies.keys():
+            patterns = string.list_patterns(pattern.length)
+            for key in patterns:
                 sub_sequence = Sequence(key)
                 hamming_distance = pattern.hamming_distance(sub_sequence)
                 if distance > hamming_distance:
@@ -467,11 +485,66 @@ class Sequence:
 
         return median_string
 
+    def profile_matrix(
+        self,
+        sequences: List[Optional[Sequence]],
+    ) -> Dict[str, Union[Dict[str, List[float]], int, str]]:
+        """Constructs the profile matrix and find the motifs score.
+
+        The motifs score is obtained by summing the elements in the motifs
+        matrix that do not coincide with the consensus elements.
+
+        Args:
+            sequences: Collection of motifs for which a profile matrix will be
+                constructed.
+
+        Returns:
+            A profile matrix for the given collection of motifs, as well as
+            the overall motifs score and the consensus string.
+        """
+
+        motifs = [self]
+        motifs.extend(sequences)
+
+        profile_matrix = {"A": [], "C": [], "G": [], "T": []}
+        motifs_score = 0
+        consensus_motif = []
+        for i in range(self.length):
+            slice = []
+            num_motifs = 0
+            for motif in motifs:
+                if motif is not None:
+                    slice.append(motif.sequence[i])
+                    num_motifs += 1
+            slice_str = "".join(slice)
+            count_max = 0
+            score = sys.maxsize
+            consensus_nucl = None
+            for nucleotide in self.nucleotides:
+                count = slice_str.count(nucleotide)
+                frac = count / num_motifs
+                profile_matrix[nucleotide].append(frac)
+                if count > count_max:
+                    count_max = count
+                    score = num_motifs - count_max
+                    consensus_nucleotide = nucleotide
+            motifs_score += score
+            consensus_motif.append(consensus_nucleotide)
+
+        consensus_motif = "".join(consensus_motif)
+        results = {
+            "Matrix": profile_matrix,
+            "Score": motifs_score,
+            "Consensus": consensus_motif,
+        }
+
+        return results
+
     def most_probable_string(
         self,
         pattern_length: int,
         profile_matrix: Dict[str, List[float]],
-    ) -> str:
+    ) -> Optional[str]:
         """Finds the profile-most probably string in a given sequence.
 
         Args:
@@ -480,12 +553,13 @@ class Sequence:
                 sequences.
 
         Returns:
-            The profile-most probably string.
+            The most probable string of pattern_length given the profile matrix.
         """
 
-        frequencies = self.frequency_table(pattern_length, reverse=False)
         highest_prob = 0.0
-        for pattern in frequencies.keys():
+        most_prob_string = self.sequence[:pattern_length]
+        patterns = self.list_patterns(pattern_length)
+        for pattern in patterns:
             total_prob = 1.0
             for i, nucleotide in enumerate(pattern):
                 prob = profile_matrix[nucleotide][i]
@@ -495,3 +569,51 @@ class Sequence:
                 most_prob_string = pattern
 
         return most_prob_string
+
+    def greedy_motif_search(
+        self,
+        sequences: List[Sequence],
+        pattern_length: int,
+    ) -> Dict[str, Union[List[Sequence], Sequence]]:
+        """Find a motif matrix in a greedy way.
+
+        Args:
+            sequences: Collection of sequences that will be searched for
+                patterns.
+            pattern_length: Fixed length of patterns.
+
+        Returns:
+            A motif matrix for the given collection of sequences, as well as
+            the consensus string.
+        """
+
+        first_motif = Sequence(self.sequence[:pattern_length])
+        remaining_motifs = [Sequence(seq.sequence[:pattern_length]) for seq in sequences]
+        best_motifs_score = first_motif.profile_matrix(remaining_motifs)["Score"]
+        best_motifs = remaining_motifs.insert(0, first_motif)
+        consensus_motif = first_motif
+
+        strings = [self]
+        strings.extend(sequences)
+        num_strings = len(strings)
+        patterns = self.list_patterns(pattern_length)  # Only collect patterns from the first sequence.
+        for motif in patterns:
+            motifs = [None] * num_strings
+            motifs[0] = Sequence(motif)
+            for i in range(1, num_strings):
+                profile_matrix = motifs[0].profile_matrix(motifs[1:])["Matrix"]
+                motif_str = strings[i].most_probable_string(
+                    pattern_length,
+                    profile_matrix,
+                )
+                motifs[i] = Sequence(motif_str)
+            motif_results = motifs[0].profile_matrix(motifs[1:])
+            motifs_score = motif_results["Score"]
+            if motifs_score < best_motifs_score:
+                best_motifs = motifs
+                best_motifs_score = motifs_score
+                consensus_motif = Sequence(motif_results["Consensus"])
+
+        results = {"Motif matrix": best_motifs, "Consensus": consensus_motif}
+
+        return results
