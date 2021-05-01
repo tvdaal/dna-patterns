@@ -488,6 +488,7 @@ class Sequence:
     def profile_matrix(
         self,
         sequences: List[Optional[Sequence]],
+        laplace: bool = True,
     ) -> Dict[str, Union[Dict[str, List[float]], int, str]]:
         """Constructs the profile matrix and find the motifs score.
 
@@ -497,6 +498,8 @@ class Sequence:
         Args:
             sequences: Collection of motifs for which a profile matrix will be
                 constructed.
+            laplace: If True then pseudocounts are added to the profile matrix
+                to reduce its sparsity.
 
         Returns:
             A profile matrix for the given collection of motifs, as well as
@@ -522,7 +525,10 @@ class Sequence:
             consensus_nucl = None
             for nucleotide in self.nucleotides:
                 count = slice_str.count(nucleotide)
-                frac = count / num_motifs
+                if laplace:
+                    frac = (count + 1) / (num_motifs + len(self.nucleotides))
+                else:
+                    frac = count / num_motifs
                 profile_matrix[nucleotide].append(frac)
                 if count > count_max:
                     count_max = count
@@ -574,6 +580,7 @@ class Sequence:
         self,
         sequences: List[Sequence],
         pattern_length: int,
+        laplace: bool = True,
     ) -> Dict[str, Union[List[Sequence], Sequence]]:
         """Find a motif matrix in a greedy way.
 
@@ -581,6 +588,8 @@ class Sequence:
             sequences: Collection of sequences that will be searched for
                 patterns.
             pattern_length: Fixed length of patterns.
+            laplace: If True then pseudocounts are added to the profile matrix
+                to reduce its sparsity.
 
         Returns:
             A motif matrix for the given collection of sequences, as well as

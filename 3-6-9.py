@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""This module is used for exc. 3.5.5 of the Bioinformatics Specialization.
+"""This module is used for exc. 3.6.9 of the Bioinformatics Specialization.
 
   Example of how to run:
 
-  python 3-5-5.py /Users/tvdaal/Dropbox/Tom/CS/Bioinformatics/Datasets/3-5-5.txt
+  python 3-6-9.py /Users/tvdaal/Dropbox/Tom/CS/Bioinformatics/Datasets/3-6-9.txt
 """
 
 
@@ -22,11 +22,7 @@ text_lst = contents[3:]
 
 sequence = seq.Sequence(text_3)
 sequences = [seq.Sequence(text) for text in text_lst]
-motif_results = sequence.greedy_motif_search(
-    sequences,
-    int(text_1),
-    laplace=False,
-)
+motif_results = sequence.greedy_motif_search(sequences, int(text_1))
 best_motifs = [motif.sequence for motif in motif_results["Motif matrix"]]
 best_motifs = "\n".join(best_motifs)
 print("\nThe motif matrix for the collection of {} sequences:\n\n{}\n".format(text_2, best_motifs))
