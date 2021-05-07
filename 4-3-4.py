@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""This module is used for exc. 4.1.5 of the Bioinformatics Specialization.
+"""This module is used for exc. 4.3.4 of the Bioinformatics Specialization.
 
   Example of how to run:
 
-  python 4-1-5.py /Users/tvdaal/Dropbox/Tom/CS/Bioinformatics/Datasets/4-1-5.txt
+  python 4-3-4.py /Users/tvdaal/Dropbox/Tom/CS/Bioinformatics/Datasets/4-3-4.txt
 """
 
 
@@ -18,14 +18,16 @@ contents = seq.parse_txt_file(input_path)
 text_1 = contents[0]
 text_2 = contents[1]
 text_3 = contents[2]
-text_lst = contents[3:]
+text_4 = contents[3]
+text_lst = contents[4:]
 
-sequence = seq.Sequence(text_3)
+sequence = seq.Sequence(text_4)
 sequences = [seq.Sequence(text) for text in text_lst]
-num_iterations = 10000
-motif_results = sequence.random_motif_searches(
+num_iterations = 20
+motif_results = sequence.gibbs_motif_searches(
     sequences,
     int(text_1),
+    int(text_3),
     num_iterations,
 )
 best_motifs = [motif.sequence for motif in motif_results["Motif matrix"]]

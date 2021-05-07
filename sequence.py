@@ -23,7 +23,7 @@ import itertools
 import numpy as np
 import random
 import sys
-from typing import Optional, List, Tuple, Dict, Set, Union
+from typing import Optional, List, Tuple, Dict, Set, Union, Any
 
 
 def parse_txt_file(path: str) -> List[str]:
@@ -201,21 +201,29 @@ class Sequence:
 
         return neighborhood
 
-    def list_patterns(self, pattern_length: int) -> List[str]:
-        """Finds all unique patterns of given length in a given sequence.
+    def list_patterns(
+        self,
+        pattern_length: int,
+        unique: bool = True,
+    ) -> List[str]:
+        """Finds all patterns of given length in a given sequence.
 
         Args:
             pattern_length: Fixed length of patterns.
+            unique: If True only unique patterns are collected.
 
         Returns:
-            List of unique patterns.
+            List of patterns with length pattern_length.
         """
 
         patterns = []
         last_pos = self.length - pattern_length + 1
         for i in range(last_pos):
             pattern = self.sequence[i:i+pattern_length]
-            if pattern not in patterns:
+            if unique:
+                if pattern not in patterns:
+                    patterns.append(pattern)
+            else:
                 patterns.append(pattern)
 
         return patterns
@@ -551,7 +559,7 @@ class Sequence:
         self,
         pattern_length: int,
         profile_matrix: Dict[str, List[float]],
-    ) -> Optional[str]:
+    ) -> str:
         """Finds the profile-most probable string in a given sequence.
 
         Args:
@@ -560,7 +568,8 @@ class Sequence:
                 sequences.
 
         Returns:
-            The most probable string of pattern_length given the profile matrix.
+            The most probable string of length pattern_length given the profile
+            matrix.
         """
 
         highest_prob = 0.0
@@ -577,13 +586,49 @@ class Sequence:
 
         return most_prob_string
 
+    def biased_string(
+        self,
+        pattern_length: int,
+        profile_matrix: Dict[str, List[float]],
+    ) -> str:
+        """Finds a profile-randomly generated string in a given sequence.
+
+        Args:
+            pattern_length: Fixed length of patterns.
+            profile_matrix: The profile matrix for an unspecified collection of
+                sequences.
+
+        Returns:
+            A string of length pattern_length based on a probability
+            distribution that derives from the given profile matrix.
+        """
+
+        patterns = self.list_patterns(pattern_length, unique=False)
+        probs = []
+        for pattern in patterns:
+            total_prob = 1.0
+            for i, nucleotide in enumerate(pattern):
+                prob = profile_matrix[nucleotide][i]
+                total_prob *= prob
+            probs.append(total_prob)
+
+        # Normalize the probability distribution to 1:
+        probs_arr = np.array(probs)
+        norm_arr = probs_arr / np.sum(probs_arr)
+        norm_probs = norm_arr.tolist()
+
+        # Pick a random pattern based on the defined probability distribution:
+        biased_string = random.choices(patterns, weights=norm_probs)[0]
+
+        return biased_string
+
     def greedy_motif_search(
         self,
         sequences: List[Sequence],
         pattern_length: int,
         laplace: bool = True,
     ) -> Dict[str, Union[List[Sequence], Sequence, int]]:
-        """Find a motif matrix in a greedy way.
+        """Finds a motif matrix in a greedy way.
 
         Args:
             sequences: Collection of sequences that will be searched for
@@ -623,6 +668,7 @@ class Sequence:
                     profile_matrix,
                 )
                 motifs[i] = Sequence(motif_str)
+
             motif_results = motifs[0].profile_matrix(
                 motifs[1:],
                 laplace=laplace,
@@ -647,7 +693,7 @@ class Sequence:
         pattern_length: int,
         laplace: bool = True,
     ) -> Dict[str, Union[List[Sequence], Sequence, int]]:
-        """Find a motif matrix in a randomized search.
+        """Finds a motif matrix in a randomized search.
 
         Args:
             sequences: Collection of sequences that will be searched for
@@ -690,6 +736,7 @@ class Sequence:
                     profile_matrix,
                 )
                 motifs[i] = Sequence(motif_str)
+
             motif_results = motifs[0].profile_matrix(
                 motifs[1:],
                 laplace=laplace,
@@ -707,7 +754,6 @@ class Sequence:
                 }
                 return results
 
-
     def random_motif_searches(
         self,
         sequences: List[Sequence],
@@ -715,7 +761,7 @@ class Sequence:
         num_iterations: int,
         laplace: bool = True,
     ) -> Dict[str, Union[List[Sequence], Sequence, int]]:
-        """Find the best motifs after repeated runs of random_motif_search.
+        """Finds the best motifs after repeated runs of random_motif_search.
 
         The motif search is repeated num_iterations times upon which the best
         motifs are selected.
@@ -738,6 +784,127 @@ class Sequence:
             iter_result = self.random_motif_search(
                 sequences,
                 pattern_length,
+                laplace=laplace,
+            )
+            results.update({i: iter_result})
+
+        best_iter = min(results, key=lambda key: results[key]["Score"])
+        best_result = results[best_iter]
+
+        return best_result
+
+    def gibbs_motif_search(
+        self,
+        sequences: List[Sequence],
+        pattern_length: int,
+        inner_loop_iterations: int,
+        laplace: bool = True,
+    ) -> Dict[str, Union[List[Sequence], Sequence, int]]:
+        """Finds a motif matrix using Gibbs sampling.
+
+        Args:
+            sequences: Collection of sequences that will be searched for
+                patterns.
+            pattern_length: Fixed length of patterns.
+            inner_loop_iterations: Number of times Gibbs sampling takes place.
+            laplace: If True then pseudocounts are added to the profile matrix
+                to reduce its sparsity.
+
+        Returns:
+            A motif matrix for the given collection of sequences, as well as
+            the consensus string and the motif score.
+        """
+
+        strings = [self]
+        strings.extend(sequences)
+        num_strings = len(strings)
+
+        last_pos = self.length - pattern_length + 1
+        motifs = [None] * num_strings
+        for i, string in enumerate(strings):
+            start_pos = random.randrange(0, last_pos)
+            end_pos = start_pos + pattern_length
+            motifs[i] = Sequence(string.sequence[start_pos:end_pos])
+        best_motifs = motifs
+        best_motifs_results = best_motifs[0].profile_matrix(
+            best_motifs[1:],
+            laplace=laplace,
+        )
+        best_motifs_score = best_motifs_results["Score"]
+        consensus_motif = best_motifs_results["Consensus"]
+
+        def swap_positions(lst: List[Any], pos_1: int, pos_2: int) -> List[Any]:
+            lst[pos_1], lst[pos_2] = lst[pos_2], lst[pos_1]
+            return lst
+
+        for j in range(inner_loop_iterations):
+            string_idx = random.randrange(0, num_strings)
+            motifs[string_idx] = None
+            if string_idx == 0:  # The zeroth element has to be of type Sequence (for the method profile_matrix), so None is not allowed.
+                motifs = swap_positions(motifs, 0, 1)
+            profile_matrix = motifs[0].profile_matrix(
+                motifs[1:],
+                laplace=laplace,
+            )["Matrix"]
+            if string_idx == 0:
+                motifs = swap_positions(motifs, 0, 1)
+            motif_str = strings[string_idx].biased_string(
+                pattern_length,
+                profile_matrix,
+            )
+            motifs[string_idx] = Sequence(motif_str)
+
+            motif_results = motifs[0].profile_matrix(
+                motifs[1:],
+                laplace=laplace,
+            )
+            motifs_score = motif_results["Score"]
+            if motifs_score < best_motifs_score:
+                best_motifs = motifs
+                best_motifs_score = motifs_score
+                consensus_motif = Sequence(motif_results["Consensus"])
+
+        results = {
+            "Motif matrix": best_motifs,
+            "Score": best_motifs_score,
+            "Consensus": consensus_motif,
+        }
+
+        return results
+
+    def gibbs_motif_searches(
+        self,
+        sequences: List[Sequence],
+        pattern_length: int,
+        inner_loop_iterations: int,
+        num_iterations: int,
+        laplace: bool = True,
+    ) -> Dict[str, Union[List[Sequence], Sequence, int]]:
+        """Finds the best motifs after repeated runs of gibbs_motif_search.
+
+        The motif search is repeated num_iterations times upon which the best
+        motifs are selected.
+
+        Args:
+            sequences: Collection of sequences that will be searched for
+                patterns.
+            pattern_length: Fixed length of patterns.
+            inner_loop_iterations: Number of times Gibbs sampling takes place.
+            num_iterations: Number of runs of the gibbs_motif_search algorithm.
+            laplace: If True then pseudocounts are added to the profile matrix
+                to reduce its sparsity.
+
+        Returns:
+            A motif matrix for the given collection of sequences, as well as
+            the consensus string and the motif score.
+        """
+
+        results = {}
+        for i in range(1, num_iterations+1):
+            iter_result = self.gibbs_motif_search(
+                sequences,
+                pattern_length,
+                inner_loop_iterations,
                 laplace=laplace,
             )
             results.update({i: iter_result})
