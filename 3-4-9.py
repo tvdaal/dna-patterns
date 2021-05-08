@@ -15,14 +15,17 @@ import time
 start_time = time.time()
 input_path = sys.argv[1]
 contents = seq.parse_txt_file(input_path)
-text_1 = contents[0]
-text_2 = contents[1]
-text_lst = contents[2:]
+text = contents[0]
+text_lst = contents[1:]
 
-sequence = seq.Sequence(text_2)
 sequences = [seq.Sequence(text) for text in text_lst]
-median_string = sequence.median_string(sequences, int(text_1))
-print("\nMedian string:\n\n{}\n".format(median_string))
+motif_results = seq.median_motif_search(sequences, int(text))
+best_motifs = [motif.sequence for motif in motif_results["Motif matrix"]]
+best_motifs = "\n".join(best_motifs)
+print("\nThe motif matrix for the collection of {} sequences:\n\n{}\n".format(len(text_lst), best_motifs))
+consensus_string = motif_results["Consensus"].sequence
+print("The median (consensus) string:\n\n{}\n".format(consensus_string))
+print("The motif score:\n\n{}\n".format(motif_results["Score"]))
 
 elapsed_time = round(time.time() - start_time, 2)
 print("This program took", elapsed_time, "seconds to run.\n")

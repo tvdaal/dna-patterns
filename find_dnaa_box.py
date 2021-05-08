@@ -52,7 +52,7 @@ def construct_argparser() -> ArgumentParser:
         "--pattern_length",
         type=int,
         default=9,
-        help="Specify the path to the input text file in FASTA format.",
+        help="Specify the length of the pattern that will be searched for.",
     )
     parser.add_argument(
         "--window_length",

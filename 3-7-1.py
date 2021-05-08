@@ -16,13 +16,11 @@ start_time = time.time()
 input_path = sys.argv[1]
 contents = seq.parse_txt_file(input_path)
 text_1 = contents[0]
-text_2 = contents[1]
-text_lst = contents[2:]
+text_lst = contents[1:]
 
 pattern = seq.Sequence(text_1)
-sequence = seq.Sequence(text_2)
 sequences = [seq.Sequence(text) for text in text_lst]
-total_distance = sequence.distance_pattern_strings(sequences, pattern)
+total_distance = seq.distance_pattern_strings(sequences, pattern)
 print("\nSum of distances between the pattern and each string:\n\n{}\n".format(total_distance))
 
 elapsed_time = round(time.time() - start_time, 2)
