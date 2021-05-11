@@ -21,7 +21,6 @@ candidates for the DnaA boxes of the genome.
 
 from argparse import ArgumentParser, ArgumentTypeError
 import sequence as seq
-import sys
 import time
 
 
@@ -88,8 +87,8 @@ if __name__ == "__main__":
     print("\nParsing input file...")
     parser = construct_argparser()
     args = parser.parse_args()
-    text = seq.parse_fasta_file(args.input_path)
-    sequence = seq.Sequence(text)
+    contents = seq.parse_fasta_file(args.input_path)
+    sequence = seq.Sequence(contents)
     print("\nSuccesfully parsed {} into a sequence of length {}.\n".format(args.input_path, sequence.length))
 
     print("\nDetermining the G-C skew minima...")
@@ -102,9 +101,9 @@ if __name__ == "__main__":
     width = int(args.window_length / 2)
     dnaa_boxes = []
     for minimum in skew["Skew minima"]:
-        min = int(minimum)
-        start_pos = (min - width) if (min >= width) else 0
-        end_pos = (min + width) if (min <= sequence.length - width) else sequence.length
+        min_skew = int(minimum)
+        start_pos = (min_skew - width) if (min_skew >= width) else 0
+        end_pos = (min_skew + width) if (min_skew <= sequence.length - width) else sequence.length
         window = sequence.sequence[start_pos:end_pos]
         window = seq.Sequence(window)
         clumps = window.find_clumps(

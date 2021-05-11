@@ -12,9 +12,9 @@ or script.
   import sequence as seq
   import sys
   input_path = sys.argv[1]
-  contents = seq.parse_txt_file(input_path)
-  sequence = seq.Sequence(contents[0])
-  rev_complement = sequence.reverse_complement()
+  contents = seq.parse_fasta_file(input_path)
+  dna_sequence = seq.Sequence(contents)
+  rev_complement = dna_sequence.reverse_complement()
 """
 
 
@@ -593,16 +593,16 @@ def find_consensus_motif(
     motifs_score = 0
     consensus_motif = []
     for i in range(motif_length):
-        slice = []
+        slicing = []
         num_motifs = 0
         for motif in motifs:
             if motif is not None:
-                slice.append(motif.sequence[i])
+                slicing.append(motif.sequence[i])
                 num_motifs += 1
-        slice_str = "".join(slice)
+        slice_str = "".join(slicing)
         count_max = 0
         score = sys.maxsize
-        consensus_nucl = None
+        consensus_nucleotide = None
 
         for nucleotide in nucleotides:
             count = slice_str.count(nucleotide)

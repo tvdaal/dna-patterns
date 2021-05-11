@@ -1,0 +1,46 @@
+name: bio
+channels:
+  - defaults
+dependencies:
+  - blas=1.0=mkl
+  - ca-certificates=2021.1.19=hecd8cb5_1
+  - certifi=2020.12.5=py39hecd8cb5_0
+  - intel-openmp=2019.4=233
+  - libcxx=10.0.0=1
+  - libffi=3.3=hb1e8313_2
+  - mkl=2019.4=233
+  - mkl-service=2.3.0=py39h9ed2024_0
+  - mkl_fft=1.3.0=py39ha059aab_0
+  - mkl_random=1.0.2=py39h16bde0e_0
+  - ncurses=6.2=h0a44026_1
+  - numpy=1.19.2=py39he57783f_0
+  - numpy-base=1.19.2=py39hde55871_0
+  - openssl=1.1.1k=h9ed2024_0
+  - pip=21.0.1=py39hecd8cb5_0
+  - python=3.9.2=h88f2d9e_0
+  - readline=8.1=h9ed2024_0
+  - setuptools=52.0.0=py39hecd8cb5_0
+  - six=1.15.0=py39hecd8cb5_0
+  - sqlite=3.35.2=hce871da_0
+  - tk=8.6.10=hb0a8c7a_0
+  - tzdata=2020f=h52ac0ba_0
+  - wheel=0.36.2=pyhd3eb1b0_0
+  - xz=5.2.5=h1de35cc_0
+  - zlib=1.2.11=h1de35cc_3
+  - pip:
+    - astroid==2.5.2
+    - attrs==20.3.0
+    - decorator==4.4.2
+    - importlab==0.6.1
+    - isort==5.8.0
+    - lazy-object-proxy==1.6.0
+    - mccabe==0.6.1
+    - networkx==2.5.1
+    - ninja==1.10.0.post2
+    - pylint==2.7.4
+    - pytype==2021.4.1
+    - pyyaml==5.4.1
+    - toml==0.10.2
+    - typed-ast==1.4.2
+    - wrapt==1.12.1
+prefix: /anaconda3/envs/bio

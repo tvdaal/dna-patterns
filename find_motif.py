@@ -23,7 +23,6 @@ motif score). The consensus string represents the regulatory motif.
 
 from argparse import ArgumentParser, ArgumentTypeError
 import sequence as seq
-import sys
 import time
 
 
