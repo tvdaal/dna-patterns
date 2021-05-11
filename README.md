@@ -1,14 +1,16 @@
-# bioinformatics
+# Introduction
 This repository contains tools to analyze DNA sequences. I decided to build it
 to support a number of analyses performed in a course on Bioinformatics,
 offered by the University of California, San Diego
 (see www.coursera.org/learn/dna-analysis).
 
+# Installation
 This repository should work for Python 3.7+. Upon executing
 'conda env create -f environment.yml' in the terminal, a virtual conda
 environment called 'bio' is created that contains all necessary packages and
 dependencies.
 
+# Modules
 The main module of this repository is sequence.py. It contains functions to
 parse an input file with DNA information. Most importantly, it contains the
 class Sequence that represents a string of DNA. This class comprises various
@@ -23,6 +25,7 @@ collection of DNA strings. These motifs are short sequences that control the
 expression of genes. To identify motifs, one can choose from various algorithms,
 some of which are nondeterministic and more suitable for longer motifs.
 
+# Improvements
 The code can be further improved by implementing proper exception handling. For
 the time being, most constraints on input arguments are implicit (and obvious).
 However, especially for third-party users, robustness of code is essential.
