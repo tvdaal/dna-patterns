@@ -7,7 +7,8 @@ replication origin might be located. Next, it searches for clumps of patterns
 in windows around those minima. Slight mismatches are allowed for, reflecting
 the possibility of random nucleotide mutations. Also reverse complements are
 included. The patterns that occur most frequently in certain windows are good
-candidates for the DnaA boxes of the genome.
+candidates for the DnaA boxes of the genome that play a vital role in the
+initiation of DNA replication.
 
     Example of how to run:
 
