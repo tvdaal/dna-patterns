@@ -13,7 +13,7 @@ or script.
   import sys
   input_path = sys.argv[1]
   contents = seq.parse_fasta_file(input_path)
-  dna_sequence = seq.Sequence(contents[0])
+  dna_sequence = seq.Sequence(contents)
   rev_complement = dna_sequence.reverse_complement()
 """
 
