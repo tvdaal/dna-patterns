@@ -9,8 +9,8 @@ or script.
 
   Typical usage example for employing the Sequence class in a different script:
 
-  import sequence as seq
   import sys
+  import sequence as seq
   input_path = sys.argv[1]
   contents = seq.parse_fasta_file(input_path)
   dna_sequence = seq.Sequence(contents)
@@ -18,12 +18,17 @@ or script.
 """
 
 
-from __future__ import annotations  # Needed for Python 3.10 type annotations for classes
+# Python future imports:
+from __future__ import annotations  # Needed for Python 3.10 type annotations for classes.
+
+# Standard Python libraries:
 import itertools
-import numpy as np
 import random
 import sys
 from typing import Optional, List, Tuple, Dict, Set, Union, Any
+
+# Third-party libraries:
+import numpy as np
 
 
 nucleotides = {"A", "T", "G", "C"}
