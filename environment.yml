@@ -1,4 +1,4 @@
-name: bio
+name: py39-bio
 channels:
   - defaults
 dependencies:
@@ -43,4 +43,4 @@ dependencies:
     - toml==0.10.2
     - typed-ast==1.4.2
     - wrapt==1.12.1
-prefix: /anaconda3/envs/bio
+prefix: /anaconda3/envs/py39-bio
