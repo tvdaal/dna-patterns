@@ -9,10 +9,10 @@ This repository should work for Python 3.7+. To get started, run the following c
 git clone https://github.com/tvdaal/dna-patterns.git
 cd dna-patterns
 conda env create -f environment.yml
-conda activate bio
+conda activate py39-bio
 ```
 
-The virtual conda environment called 'bio' contains all necessary packages and dependencies.
+The virtual conda environment called 'py39-bio' contains all necessary packages and dependencies.
 
 # Modules
 The main module of this repository is *sequence.py*. It contains functions to parse an input file with DNA information. Most importantly, it contains the class Sequence that represents a string of DNA. This class comprises various methods to perform operations or analyses on DNA sequences. Lastly, the module contains various algorithms to search for motifs in sets of DNA sequences.
